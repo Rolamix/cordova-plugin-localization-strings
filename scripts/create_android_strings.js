@@ -1,5 +1,7 @@
 var fs = require('fs-extra');
-var _ = require('lodash');
+var _has = require('lodash.has');
+var _forEach = require('lodash.foreach');
+var _assignIn = require('lodash.assignin');
 var xml2js = require('xml2js');
 
 function fileExists(path) {
@@ -23,9 +25,9 @@ module.exports = function (context) {
 
       // check the locales to write to
       var localeLangs = [];
-      if (_.has(langJson, 'locale') && _.has(langJson.locale, 'android')) {
+      if (_has(langJson, 'locale') && _has(langJson.locale, 'android')) {
         //iterate the locales to to be iterated.
-        _.forEach(langJson.locale.android, function (aLocale) {
+        _forEach(langJson.locale.android, function (aLocale) {
           localeLangs.push(aLocale);
         });
       } else {
@@ -33,7 +35,7 @@ module.exports = function (context) {
         localeLangs.push(lang.lang);
       }
 
-      _.forEach(localeLangs, function (localeLang) {
+      _forEach(localeLangs, function (localeLang) {
         var stringXmlFilePath = getLocalStringXmlPath(context, localeLang);
         var parser = new xml2js.Parser();
 
@@ -60,7 +62,7 @@ module.exports = function (context) {
               stringXmlJson = result;
 
               // initialize xmlJson to have strings
-              if (!_.has(stringXmlJson, 'resources') || !_.has(stringXmlJson.resources, 'string')) {
+              if (!_has(stringXmlJson, 'resources') || !_has(stringXmlJson.resources, 'string')) {
                 stringXmlJson.resources = {
                   'string': [],
                 };
@@ -160,20 +162,20 @@ function processResult(context, lang, langJson, stringXmlJson) {
 
   var mapObj = {};
   // create a map to the actual string
-  _.forEach(stringXmlJson.resources.string, function (val) {
-    if (_.has(val, '$') && _.has(val['$'], 'name')) {
+  _forEach(stringXmlJson.resources.string, function (val) {
+    if (_has(val, '$') && _has(val['$'], 'name')) {
       mapObj[val['$'].name] = val;
     }
   });
 
-  var langJsonToProcess = _.assignIn(langJson.config_android, langJson.app);
+  var langJsonToProcess = _assignIn(langJson.config_android, langJson.app);
 
   // now iterate through langJsonToProcess
-  _.forEach(langJsonToProcess, function (val, key) {
+  _forEach(langJsonToProcess, function (val, key) {
     // positional string format is in Mac OS X format.  change to android format
     let cleanVal = val.replace(/\$@/gi, '$s');
 
-    if (_.has(mapObj, key)) {
+    if (_has(mapObj, key)) {
       // mapObj contains key. replace key
       mapObj[key]['_'] = cleanVal;
     } else {

@@ -1,6 +1,13 @@
 var fs = require('fs-extra');
-var _ = require('lodash');
 var iconv = require('iconv-lite');
+
+var _has = require('lodash.has');
+var _forEach = require('lodash.foreach');
+var _values = require('lodash.values');
+var _find = require('lodash.find');
+var _isObject = require('lodash.isobject');
+var _isUndefined = require('lodash.isundefined');
+var _isEmpty = require('lodash.isempty');
 
 var iosProjFolder;
 var iosPbxProjPath;
@@ -16,7 +23,7 @@ var getValue = function (config, name) {
 
 function jsonToDotStrings(jsonObj) {
   var returnString = '';
-  _.forEach(jsonObj, function (val, key) {
+  _forEach(jsonObj, function (val, key) {
     returnString += '"' + key + '" = "' + val + '";\n';
   });
   return returnString;
@@ -59,7 +66,7 @@ function writeStringFile(plistStringJsonObj, lang, fileName) {
 
 function writeLocalisationFieldsToXcodeProj(filePaths, groupname, proj) {
   var fileRefSection = proj.pbxFileReferenceSection();
-  var fileRefValues = _.values(fileRefSection);
+  var fileRefValues = _values(fileRefSection);
 
   if (filePaths.length > 0) {
 
@@ -72,10 +79,10 @@ function writeLocalisationFieldsToXcodeProj(filePaths, groupname, proj) {
     }
 
     filePaths.forEach(function (path) {
-      var results = _.find(fileRefValues, function (o) {
-        return (_.isObject(o) && _.has(o, 'path') && o.path.replace(/['"]+/g, '') == path);
+      var results = _find(fileRefValues, function (o) {
+        return (_isObject(o) && _has(o, 'path') && o.path.replace(/['"]+/g, '') == path);
       });
-      if (_.isUndefined(results)) {
+      if (_isUndefined(results)) {
         //not found in pbxFileReference yet
         proj.addResourceFile('Resources/' + path, { variantGroup: true }, groupKey);
       }
@@ -101,9 +108,9 @@ module.exports = function (context) {
 
         // check the locales to write to
         var localeLangs = [];
-        if (_.has(langJson, 'locale') && _.has(langJson.locale, 'ios')) {
+        if (_has(langJson, 'locale') && _has(langJson.locale, 'ios')) {
           //iterate the locales to to be iterated.
-          _.forEach(langJson.locale.ios, function (aLocale) {
+          _forEach(langJson.locale.ios, function (aLocale) {
             localeLangs.push(aLocale);
           });
         } else {
@@ -111,21 +118,21 @@ module.exports = function (context) {
           localeLangs.push(lang.lang);
         }
 
-        _.forEach(localeLangs, function (localeLang) {
-          if (_.has(langJson, 'config_ios')) {
+        _forEach(localeLangs, function (localeLang) {
+          if (_has(langJson, 'config_ios')) {
             //do processing for appname into plist
             var plistString = langJson.config_ios;
-            if (!_.isEmpty(plistString)) {
+            if (!_isEmpty(plistString)) {
               writeStringFile(plistString, localeLang, 'InfoPlist.strings');
               infoPlistPaths.push(localeLang + '.lproj/' + 'InfoPlist.strings');
             }
           }
 
           //remove APP_NAME and write to Localizable.strings
-          if (_.has(langJson, 'app')) {
+          if (_has(langJson, 'app')) {
             //do processing for appname into plist
             var localizableStringsJson = langJson.app;
-            if (!_.isEmpty(localizableStringsJson)) {
+            if (!_isEmpty(localizableStringsJson)) {
               writeStringFile(localizableStringsJson, localeLang, 'Localizable.strings');
               localizableStringsPaths.push(localeLang + '.lproj/' + 'Localizable.strings');
             }
