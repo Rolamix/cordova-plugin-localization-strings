@@ -1,5 +1,6 @@
 var fs = require('fs-extra');
 var iconv = require('iconv-lite');
+var path = require('path');
 
 var _has = require('lodash.has');
 var _forEach = require('lodash.foreach');
@@ -8,6 +9,9 @@ var _find = require('lodash.find');
 var _isObject = require('lodash.isobject');
 var _isUndefined = require('lodash.isundefined');
 var _isEmpty = require('lodash.isempty');
+var q = require('q');
+var xcode = require('xcode');
+var glob = require('glob');
 
 var iosProjFolder;
 var iosPbxProjPath;
@@ -54,7 +58,7 @@ function writeStringFile(plistStringJsonObj, lang, fileName) {
   fs.ensureDir(lProjPath, function (err) {
     if (!err) {
       var stringToWrite = jsonToDotStrings(plistStringJsonObj);
-      var buffer = iconv.encode(stringToWrite, 'utf16');
+      var buffer = iconv.encode(stringToWrite, 'utf8');
 
       fs.open(lProjPath + '/' + fileName, 'w', function (err, fd) {
         if (err) throw err;
@@ -91,9 +95,8 @@ function writeLocalisationFieldsToXcodeProj(filePaths, groupname, proj) {
 }
 module.exports = function (context) {
 
-  var q = context.requireCordovaModule('q');
   var deferred = q.defer();
-  var xcode = require('xcode');
+
 
   var localizableStringsPaths = [];
   var infoPlistPaths = [];
@@ -167,9 +170,7 @@ module.exports = function (context) {
 
 function getTargetLang(context) {
   var targetLangArr = [];
-  var deferred = context.requireCordovaModule('q').defer();
-  var path = context.requireCordovaModule('path');
-  var glob = context.requireCordovaModule('glob');
+  var deferred = q.defer();
 
   glob('translations/app/*.json',
     function (err, langFiles) {
